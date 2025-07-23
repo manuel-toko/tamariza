@@ -4,6 +4,23 @@ import os
 import datetime
 import pandas as pd
 
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-image: url("https://tsukatte.com/wp-content/uploads/2020/07/wild-boar.png");
+        background-attachment: fixed;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center top;
+        background-color: rgba(255,255,255,0.9);  /* 半透明白背景提升对比度 */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
 # 🚫 Only allow logged-in users
 if not st.session_state.get("logged_in"):
     st.warning("⛔ Please log in to access this page!")
@@ -23,42 +40,84 @@ st.info("🔔 **Announcement:**\nThe tennis court will be closed for maintenance
 # 📂 File path
 RESERVATION_FILE = "reservations.csv"
 st.divider()
+# 🧹 Automatically clean expired reservations
+def clean_expired_reservations(file_path):
+    today = datetime.date.today()
+    cleaned = []
+
+    # load and filter reservations
+    if os.path.exists(file_path):
+        with open(file_path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    res_date = datetime.datetime.strptime(row["date"], "%Y-%m-%d").date()
+                    if res_date >= today:
+                        cleaned.append(row)
+                except Exception as e:
+                    pass  
+
+        # write cleaned data back
+        with open(file_path, mode="w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["user", "venue", "date", "time"])
+            writer.writeheader()
+            writer.writerows(cleaned)
+
 
 # 👑 Admin view: show all reservations
 if st.session_state.get("is_admin"):
     st.subheader("📋 All Reservations (Admin View)")
+
+    # ✅ Ensure file exists even if just header
+    if not os.path.exists(RESERVATION_FILE):
+        with open(RESERVATION_FILE, mode="w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["user", "venue", "date", "time"])
+
+    # Load data
+    df = pd.read_csv(RESERVATION_FILE)
+
+    # 📤 Export
     st.download_button(
         label="📤 Export All Reservations as CSV",
-        data=pd.read_csv(RESERVATION_FILE).to_csv(index=False).encode("utf-8"),
+        data=df.to_csv(index=False).encode("utf-8"),
         file_name="all_reservations.csv",
         mime="text/csv"
     )
 
-    # 🧹 Clear all reservations (with confirmation)
+    # 🔍 Filters
+    st.subheader("🔍 Filter Reservations")
+    username_filter = st.text_input("Filter by username")
+    venue_filter = st.selectbox("Filter by venue", ["All"] + sorted(df["venue"].unique().tolist()))
+    start_date = st.date_input("Start date", value=datetime.date.today())
+    end_date = st.date_input("End date", value=datetime.date.today() + datetime.timedelta(days=7))
+
+    filtered_df = df.copy()
+    if username_filter:
+        filtered_df = filtered_df[filtered_df["user"].str.contains(username_filter, case=False)]
+    if venue_filter != "All":
+        filtered_df = filtered_df[filtered_df["venue"] == venue_filter]
+    filtered_df = filtered_df[
+        (filtered_df["date"] >= str(start_date)) &
+        (filtered_df["date"] <= str(end_date))
+    ]
+
+    st.subheader("📊 Filtered Results")
+    st.dataframe(filtered_df, use_container_width=True)
+
+    # 🧹 Clear all reservations
     with st.expander("🧹 Clear All Reservations (Admin Only)"):
         st.warning("⚠️ This will permanently delete all reservations. Proceed with caution.")
         confirm = st.checkbox("Yes, I understand and want to clear all reservations.")
 
         if confirm and st.button("🚨 Confirm and Delete All"):
-            os.remove(RESERVATION_FILE)
+            with open(RESERVATION_FILE, mode="w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["user", "venue", "date", "time"])  # keep header
             st.success("✅ All reservations have been cleared.")
             st.experimental_rerun()
 
-    
-
-    if os.path.exists(RESERVATION_FILE):
-        with open(RESERVATION_FILE, newline="") as f:
-            reader = csv.DictReader(f)
-            data = list(reader)
-
-        if data:
-            st.dataframe(data, use_container_width=True)
-        else:
-            st.info("No reservations found.")
-    else:
-        st.warning("Reservation file not found.")
-
-# 🙋 Regular user view: show only their own reservations
+# 🙋 Regular user view
 else:
     st.subheader("📄 My Reservations")
 
@@ -67,7 +126,7 @@ else:
             reader = csv.DictReader(f)
             all_data = list(reader)
 
-        # Filter current user's reservations
+        # Filter user's own data
         user_data = [row for row in all_data if row["user"] == st.session_state.username]
 
         if user_data:
@@ -79,9 +138,9 @@ else:
 
                     cancel_key = f"cancel_{i}"
                     if st.button("❌ Cancel this reservation", key=cancel_key):
-                        # Remove the selected reservation from all_data
+                        # Remove from full list
                         all_data.remove(row)
-                        # Write the updated data back to CSV
+                        # Rewrite file
                         with open(RESERVATION_FILE, mode="w", newline="") as f:
                             writer = csv.DictWriter(f, fieldnames=["user", "venue", "date", "time"])
                             writer.writeheader()
@@ -93,4 +152,3 @@ else:
             st.info("You don't have any reservations yet.")
     else:
         st.warning("Reservation file not found.")
-
