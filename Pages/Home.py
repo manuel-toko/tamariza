@@ -13,7 +13,7 @@ st.markdown(
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center top;
-        background-color: rgba(255,255,255,0.9);  /* 半透明白背景提升对比度 */
+        background-color: rgba(0,0,0,0.9);  
     }
     </style>
     """,
