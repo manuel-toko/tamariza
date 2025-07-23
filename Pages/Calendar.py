@@ -6,7 +6,7 @@ from datetime import datetime
 # CSVファイルのパス
 CSV_PATH = "events.csv"
 
-st.title("📅 フル機能付きイベントカレンダー")
+st.title("📅 Event Calendar")
 
 # --- 1. CSVからイベント読み込み（キャッシュしない） ---
 def load_events():
