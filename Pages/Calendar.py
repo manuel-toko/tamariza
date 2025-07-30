@@ -5,18 +5,18 @@ import os
 import pandas as pd
 from streamlit_calendar import calendar
 
-# 🚫 ログインチェック
+# 🚫 Only allow logged-in users
 if not st.session_state.get("logged_in"):
     st.warning("⛔ Please log in to access this page.")
     st.stop()
 
 st.title("📅 Sports Facility Reservation")
 
-# === ファイルパス ===
+# 📂 CSV file paths
 RESERVATION_FILE = "reservations.csv"
 VENUE_FILE = "venues.csv"
 
-# === 会場データ読み込み ===
+# 🏟 Load venues into dictionary for enrichment
 venue_dict = {}
 venue_names = []
 if os.path.exists(VENUE_FILE):
@@ -29,28 +29,28 @@ else:
     st.error("❗ Venue file not found. Please contact admin.")
     st.stop()
 
-# === 時間帯設定 ===
+# ⏰ Time slots
 time_slots = ["09:00 - 10:00", "10:00 - 11:00", "14:00 - 15:00", "15:00 - 16:00"]
 
-# === 予約ファイルがなければ作成 ===
+# 📌 Create reservation file if missing
 if not os.path.exists(RESERVATION_FILE):
     with open(RESERVATION_FILE, mode="w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["user", "venue", "date", "time"])
 
-# === 予約を読み込み ===
+# 📤 Load all reservations
 def load_reservations():
     with open(RESERVATION_FILE, mode="r", newline="") as f:
         reader = csv.DictReader(f)
         return list(reader)
 
-# === 新規予約を保存 ===
+# 📋 Reservation form
 def save_reservation(user, venue, date, time):
     with open(RESERVATION_FILE, mode="a", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([user, venue, date, time])
 
-# === 予約を削除 ===
+# ❌ Cancel reservation by index
 def delete_reservation_by_index(index_to_remove):
     rows = load_reservations()
     with open(RESERVATION_FILE, mode="w", newline="") as f:
@@ -60,7 +60,7 @@ def delete_reservation_by_index(index_to_remove):
             if i != index_to_remove:
                 writer.writerow([row["user"], row["venue"], row["date"], row["time"]])
 
-# === 📋 予約フォーム ===
+# 📋 Reservation form
 with st.form("reservation_form"):
     venue = st.selectbox("🏟 Select Venue", venue_names)
     date = st.date_input("📅 Select Date", min_value=datetime.date.today())
@@ -83,7 +83,7 @@ if submit:
         st.success("✅ Reservation successful!")
         st.rerun()
 
-# === 📖 自分の予約一覧 ===
+# 📖 My Reservations
 st.subheader("📖 My Reservations")
 
 reservations = load_reservations()
@@ -114,7 +114,7 @@ if user_reservations:
 else:
     st.info("You don't have any reservations yet.")
 
-# === 📅 全体予約カレンダー ===
+# All reservation calendar
 st.markdown("---")
 st.subheader("📅 All Reservations Calendar")
 
@@ -130,7 +130,6 @@ def get_calendar_events():
     df["end"] = pd.to_datetime(df["date"] + " " + pd.Series(end_times))
     df["title"] = df["user"] + " @ " + df["venue"]
 
-    # ここで ISO形式の文字列に変換するのがポイント！
     df["start"] = df["start"].dt.strftime('%Y-%m-%dT%H:%M:%S')
     df["end"] = df["end"].dt.strftime('%Y-%m-%dT%H:%M:%S')
 
