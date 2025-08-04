@@ -5,12 +5,8 @@ import os
 # === Page title ===
 st.title("📝 Register New Account")
 
-# === Admin invite code for privileged users ===
-def load_invite_codes(file="admin_codes.txt"):
-    if not os.path.exists(file):
-        return set()
-    with open(file) as f:
-        return set(line.strip() for line in f if line.strip())
+# === Fixed admin invite code ===
+ADMIN_INVITE_CODE = "KYOUSHI2025"  # You can change this to any secure value
 
 # === User file location ===
 USER_FILE = "users.csv"
@@ -42,11 +38,8 @@ if submit:
             if any(row["username"] == new_username for row in reader):
                 st.error("🚫 Username already exists.")
             else:
-                # Determine if admin access is granted
-                VALID_CODES = load_invite_codes()
-                is_admin = False
-                if invite_code in VALID_CODES:
-                    is_admin = True
+                # Check fixed admin invite code
+                is_admin = invite_code == ADMIN_INVITE_CODE
 
                 # Save the new user to the file
                 with open(USER_FILE, mode="a", newline="") as f:
@@ -58,11 +51,10 @@ if submit:
                 if is_admin:
                     st.info("👑 Admin privileges granted.")
 
-                # Auto-redirect after a short delay (1 second)
                 st.session_state.registration_success = True
                 st.rerun()
 
 # === After rerun: redirect if registration was successful ===
 if st.session_state.get("registration_success"):
     del st.session_state["registration_success"]
-    st.switch_page("app")  
+    st.switch_page("app")

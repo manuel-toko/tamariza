@@ -63,6 +63,6 @@ else:
         st.session_state.logged_in = False
         st.session_state.username = ""
         st.session_state.is_admin = False
-        st.experimental_rerun()
+        st.rerun()
 
     st.write("Please select a feature page from the left 👈")
