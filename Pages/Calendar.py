@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from streamlit_calendar import calendar
 
-# 🚫 Only allow logged-in users
+#  Only allow logged-in users
 if not st.session_state.get("logged_in"):
     st.warning("⛔ Please log in to access this page.")
     st.stop()
@@ -16,7 +16,7 @@ st.title("📅 Sports Facility Reservation")
 RESERVATION_FILE = "reservations.csv"
 VENUE_FILE = "venues.csv"
 
-# 🏟 Load venues into dictionary for enrichment
+#  Load venues into dictionary for enrichment
 venue_dict = {}
 venue_names = []
 if os.path.exists(VENUE_FILE):
@@ -29,28 +29,28 @@ else:
     st.error("❗ Venue file not found. Please contact admin.")
     st.stop()
 
-# ⏰ Time slots
+#  Time slots
 time_slots = ["09:00 - 10:00", "10:00 - 11:00", "14:00 - 15:00", "15:00 - 16:00"]
 
-# 📌 Create reservation file if missing
+# Create reservation file if missing
 if not os.path.exists(RESERVATION_FILE):
     with open(RESERVATION_FILE, mode="w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["user", "venue", "date", "time"])
 
-# 📤 Load all reservations
+#  Load all reservations
 def load_reservations():
     with open(RESERVATION_FILE, mode="r", newline="") as f:
         reader = csv.DictReader(f)
         return list(reader)
 
-# 📋 Reservation form
+# Reservation form
 def save_reservation(user, venue, date, time):
     with open(RESERVATION_FILE, mode="a", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([user, venue, date, time])
 
-# ❌ Cancel reservation by index
+#  Cancel reservation by index
 def delete_reservation_by_index(index_to_remove):
     rows = load_reservations()
     with open(RESERVATION_FILE, mode="w", newline="") as f:
@@ -60,7 +60,7 @@ def delete_reservation_by_index(index_to_remove):
             if i != index_to_remove:
                 writer.writerow([row["user"], row["venue"], row["date"], row["time"]])
 
-# 📋 Reservation form
+#  Reservation form
 with st.form("reservation_form"):
     venue = st.selectbox("🏟 Select Venue", venue_names)
     date = st.date_input("📅 Select Date", min_value=datetime.date.today())
@@ -83,7 +83,7 @@ if submit:
         st.success("✅ Reservation successful!")
         st.rerun()
 
-# 📖 My Reservations
+# My Reservations
 st.subheader("📖 My Reservations")
 
 reservations = load_reservations()

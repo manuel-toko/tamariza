@@ -72,6 +72,6 @@ It supports both **users** and **administrators**, including features such as:
 
 If you encounter issues or have suggestions, feel free to contact the developer.
 
-📧 **Contact:** example@kyushu-u.ac.jp  
+📧 **Contact:** kyoso_project_group@kyushu-u.ac.jp  
 📘 **Source Code:** _Available upon request_  
 """)
