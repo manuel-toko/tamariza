@@ -118,22 +118,33 @@ else:
 st.markdown("---")
 st.subheader("📅 All Reservations Calendar")
 
+#Color settings for each venue
+venue_colors = {
+    "Tennis Court": "green" ,
+    "Multipurpose Field": "blue",
+    "Basball Field": "red",
+    "Track & Field Stadium": "purple",
+    "Archery Range": "orange",
+    "Gymnasium": "teal"
+}
+
 def get_calendar_events():
     rows = load_reservations()
     df = pd.DataFrame(rows)
     if df.empty:
         return []
-    
+
     start_times = [t.split(" - ")[0] for t in df["time"]]
     end_times = [t.split(" - ")[1] for t in df["time"]]
     df["start"] = pd.to_datetime(df["date"] + " " + pd.Series(start_times))
     df["end"] = pd.to_datetime(df["date"] + " " + pd.Series(end_times))
     df["title"] = df["user"] + " @ " + df["venue"]
+    df["color"] = df["venue"].map(lambda v: venue_colors.get(v, "gray"))
 
     df["start"] = df["start"].dt.strftime('%Y-%m-%dT%H:%M:%S')
     df["end"] = df["end"].dt.strftime('%Y-%m-%dT%H:%M:%S')
 
-    return df[["title", "start", "end"]].to_dict(orient="records")
+    return df[["title", "start", "end", "color"]].to_dict(orient="records")
 
 options = {
     "initialView": "dayGridMonth",
