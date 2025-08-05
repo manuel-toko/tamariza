@@ -57,4 +57,3 @@ if submit:
 # === After rerun: redirect if registration was successful ===
 if st.session_state.get("registration_success"):
     del st.session_state["registration_success"]
-    st.switch_page("app")
